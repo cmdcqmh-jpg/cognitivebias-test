@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="zh-HK"><head>
+<meta charset="UTF-8">
+<title>認知偏差小教室（50題庫．隨機10題）</title>
+<style>
+  body{font-family:"Noto Sans HK",sans-serif;background:linear-gradient(135deg,#e0f7fa,#b2ebf2);margin:0;padding:20px;color:#333;line-height:1.8}
+  .container{max-width:920px;margin:auto;background:white;border-radius:20px;padding:35px;box-shadow:0 15px 35px rgba(0,0,0,0.12)}
+  h1{text-align:center;color:#00796b;margin-bottom:8px}
+  .progress{text-align:center;font-size:1.35em;margin:25px 0;color:#00796b;font-weight:bold}
+  .question{background:#f8fdff;padding:28px;border-radius:15px;border-left:8px solid #00bcd4;margin:30px 0}
+  .options{display:grid;gap:16px;margin-top:25px}
+  .option{padding:18px;background:#e0f2f1;border-radius:12px;cursor:pointer;transition:all .3s;font-size:1.1em;text-align:center}
+  .option:hover{background:#b2dfdb;transform:translateY(-4px)}
+  .option.correct{background:#c8e6c9 !important;border:3px solid #4caf50}
+  .option.wrong{background:#ffcdd2 !important;border:3px solid #f44336}
+  .feedback{margin-top:25px;padding:22px;border-radius:12px;font-size:1.15em}
+  .feedback.correct{background:#e8f5e9;border-left:6px solid #66bb6a}
+  .feedback.wrong{background:#fff3e0;border-left:6px solid #ffa726}
+  button.next{display:block;margin:40px auto;padding:14px 50px;font-size:1.3em;background:#00796b;color:white;border:none;border-radius:50px;cursor:pointer}
+  button.next:hover{background:#004d40}
+  .end{text-align:center;padding:60px 20px;font-size:1.5em;line-height:2}
+  .score{font-size:2.8em;font-weight:bold;color:#00796b;margin:20px 0}
+  .hidden{display:none}
+</style>
+<script defer="" data-domain="qmh-ot-cognitive-bias-learning.tiiny.site" src="https://analytics.tiiny.site/js/plausible.js"></script><script type="text/javascript" src="https://tiiny.host/ad-script.js"></script><meta property="og:url" content="https://qmh-ot-cognitive-bias-learning.tiiny.site/" data-id="th-modified"><meta property="og:type" content="website" data-id="th-modified"></head>
+<body>
+<div class="container">
+  <h1>認知偏差小教室</h1>
+  <p style="text-align:center;color:#555;font-size:1.25em">
+    50個香港人日常情境，只用10種常見認知偏差<br>每次隨機10題，答完有分數同鼓勵呀！
+  </p>
+  <div class="progress">第 <span id="current">1</span> / 10 題</div>
+  <div id="quiz"></div>
+  <button class="next hidden" id="nextBtn">繼續 →</button>
+
+  <div id="endScreen" class="end hidden">
+    <h2>完成晒啦！辛苦晒！</h2>
+    <div class="score" id="finalScore"></div>
+    <p id="finalMsg"></p>
+    <button onclick="location.reload()" style="padding:14px 50px;font-size:1.3em;background:#00bcd4;color:white;border:none;border-radius:50px;cursor:pointer;margin-top:30px">
+      再玩一次
+    </button>
+  </div>
+</div>
+
+<script>
+// 只用以下10種偏差嘅50題題庫
+const questions = [
+  {q:"考試得90分，阿明覺得自己好失敗，因為唔係100分。",options:["追求完美","非黑即白","以偏蓋全","情緒主導"],correct:0,exp:"追求完美：唔係完美就等於失敗，其實90分已經好叻"},
+  {q:"朋友遲咗回訊息，阿華即刻覺得佢一定討厭自己。",options:["思想閱讀","過份自責","負面水晶球","「應該/一定」句子"],correct:0,exp:"思想閱讀：無證據就假設對方點諗，好多時只係對方忙緊"},
+  {q:"小組報告遲交被老細鬧，阿敏一個人喊，其他人冇做小組報告，得阿敏一個人做，阿敏覺得全部都係自己嘅錯。",options:["過份自責","信息過濾","災難化思想","以偏蓋全"],correct:0,exp:"過份自責：將所有責任攬上身，唔使一個人孭晒"},
+  {q:"因為一次遲到，阿俊覺得老闆一定會永遠唔會提攜自己。",options:["災難化思想","負面水晶球","以偏蓋全","思想閱讀"],correct:0,exp:"災難化思想：將小事放大成最壞、最長遠嘅後果"},
+  {q:"同事無同自己打招呼，阿怡覺得對方一定討厭自己。",options:["思想閱讀","負面水晶球","過份自責","信息過濾"],correct:0,exp:"思想閱讀：無問就腦補對方負面想法"},
+  {q:"今日心情差，阿玲就覺得自己成個人都不好、一世都唔會開心。",options:["情緒主導","負面水晶球","以偏蓋全","非黑即白"],correct:0,exp:"情緒主導：因為而家感覺差，就當成事實同未來都係咁"},
+  {q:"失戀一次，阿芳覺得自己永遠都搵唔到人鍾意。",options:["以偏蓋全","負面水晶球","災難化思想","追求完美"],correct:0,exp:"以偏蓋全：一次失敗就當永遠失敗"},
+  {q:"阿強成日覺得：「我應該要成日都開心，唔開心就係我有問題。」",options:["「應該/一定」句子","追求完美","非黑即白","過份自責"],correct:0,exp:"「應該/一定」句子：用「應該」嚟苛責自己，人有唔開心好正常"},
+  {q:"被裁員後，阿俊只記得老闆鬧過佢一次，其他讚賞全部唔記得。",options:["信息過濾","災難化思想","負面水晶球","情緒主導"],correct:0,exp:"信息過濾：只睇到負面，自動過濾晒正面"},
+  {q:"同男朋友吵架一次，阿傑就覺得自己係全世界最差嘅男朋友。",options:["非黑即白","以偏蓋全","過份自責","追求完美"],correct:0,exp:"非黑即白：只有最好或最差，無中間位"},
+  {q:"考試前好緊張，阿珊覺得：「我咁緊張，一定考到一塌糊塗。」",options:["負面水晶球","情緒主導","災難化思想","「應該/一定」句子"],correct:0,exp:"負面水晶球：預測最壞嘅未來，好似有水晶球咁"},
+  {q:"朋友讚人靚，阿詩即刻覺得係反話，心入面係話我醜。",options:["思想閱讀","負面水晶球","信息過濾","情緒主導"],correct:0,exp:"思想閱讀＋負面水晶球：將好話腦補成負面"},
+  {q:"一次講錯嘢，阿偉就覺得自己永遠都唔識同人相處。",options:["以偏蓋全","災難化思想","非黑即白","過份自責"],correct:0,exp:"以偏蓋全：一次失誤＝永遠都係咁"},
+  {q:"因為心情差，阿花覺得自己一定會做唔好今日嘅工作。",options:["情緒主導","負面水晶球","災難化思想","信息過濾"],correct:0,exp:"情緒主導：用而家嘅情緒判斷未來表現"},
+  {q:"小組得B，阿敏覺得全部都係自己拖累大家。",options:["過份自責","信息過濾","以偏蓋全","追求完美"],correct:0,exp:"過份自責：將團隊結果全部攬上身"},
+  {q:"老闆無回覆電郵，阿明覺得自己一定做得好差。",options:["負面水晶球","思想閱讀","「應該/一定」句子","情緒主導"],correct:0,exp:"負面水晶球：腦補最壞嘅可能性"},
+  {q:"考試得85分，阿欣覺得好失敗，因為有同學100分。",options:["追求完美","非黑即白","比較後自責","信息過濾"],correct:0,exp:"追求完美：唔係最高分就等於失敗"},
+  {q:"朋友取消約會，阿華覺得一定係自己悶。",options:["追求完美","過份自責","負面水晶球","情緒主導"],correct:0,exp:"過份自責：將對方行為解釋成自己嘅錯"},
+  {q:"一次面試唔成功，阿傑覺得自己永遠搵唔到工。",options:["以偏蓋全","負面水晶球","災難化思想","非黑即白"],correct:0,exp:"以偏蓋全：一次失敗＝永遠失敗"},
+  {q:"阿強覺得：「我一定唔可以有負面情緒，有就係我唔夠強。」",options:["「應該/一定」句子","追求完美","非黑即白","情緒主導"],correct:0,exp:"「應該/一定」句子：用「一定」限制自己嘅情緒"},
+  {q:"只記得負面新聞，阿玲覺得世界好危險，出街好危險。",options:["信息過濾","災難化思想","負面水晶球","情緒主導"],correct:0,exp:"信息過濾：只接收負面資訊，忽略正面"},
+  {q:"考完試覺得好差，阿詩話：「我感覺咁差，一定考爛晒。」",options:["情緒主導","負面水晶球","災難化思想","思想閱讀"],correct:0,exp:"情緒主導：用感覺預測結果"},
+  {q:"同事升職，阿敏覺得自己完全無用。",options:["非黑即白","過份自責","以偏蓋全","追求完美"],correct:0,exp:"非黑即白：人地成功＝自己完全失敗"},
+  {q:"因為一次失誤，阿俊覺得自己永遠都係失敗者。",options:["以偏蓋全","標籤自己","災難化思想","過份自責"],correct:0,exp:"以偏蓋全：一次錯＝永遠錯"},
+  {q:"朋友無讚好IG，阿花覺得自己post咗啲嘢好悶，悶親人。",options:["思想閱讀","負面水晶球","過份自責","情緒主導"],correct:0,exp:"思想閱讀：腦補朋友負面想法"},
+  {q:"阿怡成日覺得：「我應該要幫到所有人，幫唔到就係我失敗。」",options:["「應該/一定」句子","追求完美","過份自責","非黑即白"],correct:0,exp:"「應該/一定」句子＋追求完美：用苛刻標準要求自己"},
+  {q:"見到人減肥成功，阿欣覺得自己一定減唔到。",options:["負面水晶球","以偏蓋全","信息過濾","情緒主導"],correct:0,exp:"負面水晶球：預測自己最壞結果"},
+  {q:"心情低落時，阿偉覺得未來都係灰暗。",options:["情緒主導","負面水晶球","災難化思想","信息過濾"],correct:0,exp:"情緒主導：而家嘅情緒決定未來展望"},
+  {q:"一次公開演講緊張，阿珊就覺得自己永遠唔識講嘢。",options:["以偏蓋全","非黑即白","過份自責","追求完美"],correct:0,exp:"以偏蓋全：一次緊張＝永遠唔得"},
+  {q:"老闆話「做得好」，阿明覺得佢講大話。",options:["思想閱讀","負面水晶球","信息過濾","情緒主導"],correct:0,exp:"思想閱讀：將讚賞腦補成負面"},
+  {q:"小組有人遲到，阿花覺得係自己冇提大家早啲。",options:["過份自責","思想閱讀","「應該/一定」句子","災難化思想"],correct:0,exp:"過份自責：將唔關自己控制嘅事都攬上身"},
+  {q:"因為今日無精神，阿玲覺得自己一定做唔好presentation。",options:["負面水晶球","情緒主導","災難化思想","以偏蓋全"],correct:0,exp:"負面水晶球：預測最壞表現"},
+  {q:"朋友約第二次，阿傑覺得對方只係出於同情。",options:["思想閱讀","負面水晶球","過份自責","信息過濾"],correct:0,exp:"思想閱讀：腦補對方負面動機"},
+  {q:"得B+，阿詩覺得自己好失敗，因為唔係A。",options:["追求完美","非黑即白","以偏蓋全","「應該/一定」句子"],correct:0,exp:"追求完美：唔係最高就等於失敗"},
+  {q:"同事皺眉，阿敏即刻覺得係自己得罪人。",options:["思想閱讀","過份自責","負面水晶球","個人化"],correct:0,exp:"思想閱讀：將中性表情腦補成負面"},
+  {q:"一次幫唔到朋友，阿華覺得自己係壞朋友。",options:["非黑即白","過份自責","以偏蓋全","追求完美"],correct:0,exp:"非黑即白：一次幫唔到＝完全壞朋友"},
+  {q:"心情好時覺得一切順利，心情差時覺得一切都差，阿俊都信。",options:["情緒主導","負面水晶球","信息過濾","災難化思想"],correct:0,exp:"情緒主導：情緒決定對現實嘅判斷"},
+  {q:"阿怡覺得：「我一定唔可以犯錯，犯錯就證明我無能。」",options:["「應該/一定」句子","追求完美","非黑即白","過份自責"],correct:0,exp:"「應該/一定」句子＋追求完美：唔允許自己有錯"},
+  {q:"只記得批評，阿明忽略晒所有讚賞。",options:["信息過濾","負面水晶球","情緒主導","災難化思想"],correct:0,exp:"信息過濾：自動刪除正面資訊"},
+  {q:"因為一次遲交，阿花覺得老闆一定永遠記住自己唔好。",options:["災難化思想","以偏蓋全","負面水晶球","思想閱讀"],correct:0,exp:"災難化思想：小事變成長遠負面影響"},
+  {q:"朋友無即時回覆，阿偉覺得自己傅送的嘢，朋友會覺得好蠢。",options:["思想閱讀","過份自責","負面水晶球","情緒主導"],correct:0,exp:"思想閱讀：沒有足夠資訊下估計了朋友的想法"},
+  {q:"考試前失眠，阿珊覺得自己一定考唔到。",options:["負面水晶球","情緒主導","災難化思想","「應該/一定」句子"],correct:0,exp:"負面水晶球：預測最壞結果"},
+  {q:"阿傑覺得：「我應該要獨立，靠人就係我弱。」",options:["「應該/一定」句子","追求完美","非黑即白","過份自責"],correct:0,exp:"「應該/一定」句子：用嚴苛標準要求自己"},
+  {q:"見到負面新聞，阿詩就覺得出街好危險。",options:["信息過濾","災難化思想","負面水晶球","情緒主導"],correct:0,exp:"信息過濾＋災難化思想：只接收負面就放大恐懼"},
+  {q:"一次講錯嘢，阿玲就覺得自己社交完全無能。",options:["以偏蓋全","非黑即白","過份自責","追求完美"],correct:0,exp:"以偏蓋全：一次錯＝永遠無能"},
+  {q:"心情低落，阿華覺得未來都無希望。",options:["情緒主導","負面水晶球","災難化思想","信息過濾"],correct:0,exp:"情緒主導：而家差＝未來都差"},
+  {q:"朋友突然冷淡，阿敏覺得一定係自己做錯咗。",options:["過份自責","思想閱讀","負面水晶球","以偏蓋全"],correct:0,exp:"過份自責：全部怪自己"},
+  {q:"因為一次失敗，阿俊覺得自己完全無價值。",options:["非黑即白","情緒主導","過份自責","災難化思想"],correct:0,exp:"非黑即白：唔成功＝完全無價值"},
+  {q:"阿花成日覺得：「我一定唔可以喊，喊就係我弱。」",options:["「應該/一定」句子","追求完美","非黑即白","情緒主導"],correct:0,exp:"「應該/一定」句子：唔允許自己有正常情緒"}
+];
+
+let selected = [];
+let current = 0;
+let score = 0;
+
+function startQuiz() {
+  selected = [...questions].sort(()=>0.5-Math.random()).slice(0,10);
+  // 每題選項打亂，並計算新嘅正確索引
+  selected.forEach(q => {
+    const originalCorrectBias = q.options[q.correct];
+    q.options = [...q.options].sort(()=>0.5-Math.random());
+    q.correctIndex = q.options.indexOf(originalCorrectBias);  // 新正確索引
+  });
+  current = 0; score = 0;
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = selected[current];
+  document.getElementById("current").textContent = current+1;
+  document.getElementById("quiz").innerHTML = `
+    <div class="question">
+      <h3>情境 ${current+1}</h3>
+      <p style="font-size:1.2em;margin:20px 0">${q.q}</p>
+      <div class="options">
+        ${q.options.map((opt,i)=>`<div class="option" data-index="${i}">${opt}</div>`).join('')}
+      </div>
+      <div class="feedback hidden" id="fb"></div>
+    </div>`;
+  
+  document.querySelectorAll(".option").forEach(opt=>{
+    opt.onclick = function() {
+      if(this.classList.contains("correct")||this.classList.contains("wrong")) return;
+      const chosenIdx = +this.dataset.index;
+      const correctIdx = q.correctIndex;
+      const isCorrect = chosenIdx === correctIdx;
+      const correctLabel = q.options[correctIdx];
+
+      if(isCorrect) { 
+        this.classList.add("correct"); 
+        score++; 
+      } else { 
+        this.classList.add("wrong"); 
+        document.querySelector(`.option[data-index="${correctIdx}"]`).classList.add("correct"); 
+      }
+
+      const fb = document.getElementById("fb");
+      fb.classList.remove("hidden");
+      fb.className = "feedback " + (isCorrect?"correct":"wrong");
+      fb.innerHTML = isCorrect ?
+        `<strong>答得啱！好叻呀！</strong><br>${q.exp}<br><br>你越來越識捉自己嘅想法陷阱啦！繼續加油！` :
+        `<strong>唔緊要，下次一定得！</strong><br>正確係：<strong>${correctLabel}</strong><br>${q.exp}<br><br>你已經好努力去理解自己，真係好值得讚賞！繼續落去啦！`;
+
+      document.getElementById("nextBtn").classList.remove("hidden");
+    };
+  });
+}
+
+document.getElementById("nextBtn").onclick = () => {
+  current++;
+  if(current < 10) { document.getElementById("nextBtn").classList.add("hidden"); showQuestion(); }
+  else { showResult(); }
+};
+
+function showResult() {
+  let msg = "";
+  if(score >= 9) msg = `${score}/10　神級！ 你已經好叻捉認知偏差啦！`;
+  else if(score >= 7) msg = `${score}/10　好叻呀！ 你進步好快！`;
+  else if(score >= 5) msg = `${score}/10　唔錯呀！ 繼續練習會愈來愈叻！`;
+  else msg = `${score}/10　唔緊要！ 認出偏差本身就係最大嘅進步！`;
+
+  document.getElementById("finalScore").innerHTML = `${score} / 10　`;
+  document.getElementById("finalMsg").innerHTML = `${msg}<br><br>每次認出一個偏差，就多咗一份照顧自己心情嘅能力<br>你真係好棒！繼續加油呀！`;
+  document.getElementById("quiz").innerHTML = "";
+  document.getElementById("nextBtn").classList.add("hidden");
+  document.getElementById("endScreen").classList.remove("hidden");
+}
+
+startQuiz();
+</script>
+
+</body></html>
